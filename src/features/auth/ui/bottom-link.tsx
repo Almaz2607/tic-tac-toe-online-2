@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 
-export default function BottomLink({
+export function BottomLink({
   linkText,
   text,
   url,
