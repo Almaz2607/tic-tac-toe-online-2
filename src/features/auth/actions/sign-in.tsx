@@ -9,7 +9,7 @@ export type SignInFormState = {
   errors?: {
     login?: string;
     password?: string;
-    _errors: string;
+    _errors?: string;
   };
 };
 

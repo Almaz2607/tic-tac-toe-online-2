@@ -11,6 +11,7 @@ async function main() {
     data: { login: "user 2", passwordHash: "faagsafsfsaefaf", rating: 700 },
   });
 }
+
 main()
   .then(async () => {
     await prisma.$disconnect();

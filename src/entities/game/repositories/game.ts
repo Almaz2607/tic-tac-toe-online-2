@@ -1,7 +1,7 @@
+import z from "zod";
 import { prisma } from "@/shared/lib/db";
 import { GameEntity, GameIdleEntity, GameOverEntity } from "../domain";
 import { Game, Prisma, User } from "@/generated/prisma";
-import z from "zod";
 import { removePassword } from "@/shared/lib/password";
 
 async function gamesList(where?: Prisma.GameWhereInput): Promise<GameEntity[]> {
