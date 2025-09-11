@@ -1,11 +1,16 @@
+"use client";
+
 import { GameId } from "@/kernel/ids";
 import { GameLayout } from "../ui/layout";
 import { GameDomain } from "@/entities/game";
 import { GamePlayers } from "../ui/players";
 import { GameStatus } from "../ui/status";
 import { GameField } from "../ui/field";
+import { useEventSource } from "@/shared/lib/sse/client";
 
 export function Game({ gameId }: { gameId: GameId }) {
+  const { dataStream, error } = useEventSource(`/game/${gameId}/stream`, 1);
+
   const game: GameDomain.GameEntity = {
     id: "1",
     players: [
@@ -23,6 +28,14 @@ export function Game({ gameId }: { gameId: GameId }) {
     status: "gameOverDraw",
     field: [null, null, null, "X", "O", null, null, null, null],
   };
+
+  return (
+    <div>
+      {dataStream}
+      {error ? "Ошибка подключения" : undefined}
+    </div>
+  );
+
   return (
     <GameLayout
       players={<GamePlayers game={game} />}
