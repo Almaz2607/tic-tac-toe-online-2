@@ -11,8 +11,8 @@ export function useEventSource<T>(url: string) {
     gameEvents.addEventListener("message", (message) => {
       try {
         setIsPending(false);
-        setData(JSON.parse(message.data));
         setError(undefined);
+        setData(JSON.parse(message.data));
       } catch (e) {
         setError(e);
       }
