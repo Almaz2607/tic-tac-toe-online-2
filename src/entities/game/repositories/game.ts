@@ -6,18 +6,21 @@ import {
   GameOverEntity,
   PlayerEntity,
 } from "../domain";
-import { Game, Prisma, User } from "@/generated/prisma";
-import { removePassword } from "@/shared/lib/password";
+import { Game, GamePlayer, Prisma, User } from "@/generated/prisma";
 import { GameId } from "@/kernel/ids";
+
+const gameInclude = {
+  winner: { include: { user: true } },
+  players: { include: { user: true } },
+};
 
 async function gamesList(where?: Prisma.GameWhereInput): Promise<GameEntity[]> {
   const games = await prisma.game.findMany({
     where,
-    include: {
-      winner: true,
-      players: true,
-    },
+    include: gameInclude,
   });
+
+  games.map((game) => game.players.map((p) => p.user));
 
   return games.map(dbGameToGameEntity);
 }
@@ -28,16 +31,14 @@ async function startGame(gameId: GameId, player: PlayerEntity) {
       where: { id: gameId },
       data: {
         players: {
-          connect: {
-            id: player.id,
+          create: {
+            userId: player.id,
+            index: 1,
           },
         },
         status: "inProgress",
       },
-      include: {
-        winner: true,
-        players: true,
-      },
+      include: gameInclude,
     }),
   );
 }
@@ -45,10 +46,7 @@ async function startGame(gameId: GameId, player: PlayerEntity) {
 async function getGame(where?: Prisma.GameWhereInput) {
   const game = await prisma.game.findFirst({
     where,
-    include: {
-      winner: true,
-      players: true,
-    },
+    include: gameInclude,
   });
 
   if (game) {
@@ -65,13 +63,13 @@ async function createGame(game: GameIdleEntity): Promise<GameEntity> {
       id: game.id,
       field: game.field,
       players: {
-        connect: { id: game.creator.id },
+        create: {
+          index: 0,
+          userId: game.creator.id,
+        },
       },
     },
-    include: {
-      players: true,
-      winner: true,
-    },
+    include: gameInclude,
   });
 
   return dbGameToGameEntity(createdGame);
@@ -81,11 +79,13 @@ const fieldSchema = z.array(z.union([z.string(), z.null()]));
 
 function dbGameToGameEntity(
   game: Game & {
-    players: User[];
-    winner?: User | null;
+    players: Array<GamePlayer & { user: User }>;
+    winner?: (GamePlayer & { user: User }) | null;
   },
 ): GameEntity {
-  const players = game.players.map(removePassword);
+  const players = game.players
+    .sort((a, b) => a.index - b.index)
+    .map(dbPlayerToPlayer);
 
   switch (game.status) {
     case "idle": {
@@ -120,11 +120,21 @@ function dbGameToGameEntity(
         players: players,
         status: game.status,
         field: fieldSchema.parse(game.field),
-        winner: removePassword(game.winner),
+        winner: dbPlayerToPlayer(game.winner),
       } satisfies GameOverEntity;
     }
   }
 }
+
+export const dbPlayerToPlayer = (
+  db: GamePlayer & { user: User },
+): PlayerEntity => {
+  return {
+    id: db.user.id,
+    login: db.user.login,
+    rating: db.user.rating,
+  };
+};
 
 export const gameRepository = {
   gamesList,
