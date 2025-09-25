@@ -74,11 +74,15 @@ export const getPlayerSymbol = (
   return { 0: GameSymbol.X, 1: GameSymbol.O }[index];
 };
 
-export const doStep = (
-  game: GameInProgressEntity,
-  player: PlayerEntity,
-  index: number,
-) => {
+export const doStep = ({
+  game,
+  player,
+  index,
+}: {
+  game: GameInProgressEntity;
+  player: PlayerEntity;
+  index: number;
+}) => {
   const currentSymbol = getGameCurrentSymbol(game);
 
   if (currentSymbol !== getPlayerSymbol(player, game)) {
