@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export function useEventSource<T>(url: string) {
+export function useEventsSource<T>(url: string) {
   const [isPending, setIsPending] = useState(true);
   const [data, setData] = useState<T>();
   const [error, setError] = useState<unknown | undefined>();
